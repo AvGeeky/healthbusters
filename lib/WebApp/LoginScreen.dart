@@ -1,5 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:yourhealth/MobileApp/LoginScreen.dart';
+import 'package:yourhealth/MobileApp/OtpScreen.dart';
+import 'package:yourhealth/auth.dart';
 import 'package:yourhealth/colorPallete.dart';
+
+String selectedCountryCode = '+91'; // Default country code
+
+  // To get the width of the login box
+double getLoginBoxWidth(BuildContext context) {
+  double loginBoxWidth = MediaQuery.of(context).size.width;
+  if (loginBoxWidth < 480) {
+    loginBoxWidth = loginBoxWidth * 0.8;
+  } else if (loginBoxWidth < 780) {
+    loginBoxWidth = loginBoxWidth * 0.6;
+  } else {
+    loginBoxWidth = 470;
+  }
+  return loginBoxWidth;
+}
+// To get the height of the login box
+double getLoginBoxHeight(BuildContext context) {
+  double loginBoxHeight = MediaQuery.of(context).size.height;
+  if (loginBoxHeight < 480) {
+    loginBoxHeight = loginBoxHeight * 0.8;
+  } else if (loginBoxHeight < 780) {
+    loginBoxHeight = loginBoxHeight * 0.6;
+  } else {
+    loginBoxHeight = 450;
+  }
+  return loginBoxHeight;
+}
 
 class LoginScreenWeb extends StatefulWidget {
   const LoginScreenWeb({super.key});
@@ -9,11 +39,34 @@ class LoginScreenWeb extends StatefulWidget {
 }
 
 class _LoginScreenWebState extends State<LoginScreenWeb> {
-  final TextEditingController _phoneController = TextEditingController();
-  String _selectedCountryCode = '+1'; // Default country code
+  final Auth _auth = Auth();
 
   // List of country codes
   final List<String> _countryCodes = ['+1', '+44', '+91', '+33', '+81'];
+
+  void _verifyPhoneNumber() async {
+      try {
+        await _auth.signInWithPhoneNumber(
+          selectedCountryCode + phoneController.text,
+          (verificationId) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OtpVerificationPageNMobile(
+                    selectedCountryCode + phoneController.text ,verificationId),
+              ),
+            );
+          },
+        );
+      } catch (e) {
+        // Handle errors such as invalid phone number or network issues
+        print('Failed to verify phone number: $e');
+        // You can show a dialog or a Snackbar with the error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to verify phone number: $e')),
+        );
+      }
+  }
 
   // Method to show country code picker
   void _showCountryCodePicker() {
@@ -27,7 +80,7 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
               title: Text(code),
               onTap: () {
                 setState(() {
-                  _selectedCountryCode = code;
+                  selectedCountryCode = code;
                 });
                 Navigator.pop(context); // Close the bottom sheet
               },
@@ -38,41 +91,11 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
     );
   }
 
-  // To get the width of the login box
-  double getLoginBoxWidth(BuildContext context) {
-    double loginBoxWidth = MediaQuery.of(context).size.width;
-
-    if (loginBoxWidth < 480) {
-      loginBoxWidth = loginBoxWidth * 0.8;
-    } else if (loginBoxWidth < 780) {
-      loginBoxWidth = loginBoxWidth * 0.6;
-    } else {
-      loginBoxWidth = 470;
-    }
-
-    return loginBoxWidth;
-  }
-
-  // To get the height of the login box
-  double getLoginBoxHeight(BuildContext context) {
-    double loginBoxHeight = MediaQuery.of(context).size.height;
-
-    if (loginBoxHeight < 480) {
-      loginBoxHeight = loginBoxHeight * 0.8;
-    } else if (loginBoxHeight < 780) {
-      loginBoxHeight = loginBoxHeight * 0.6;
-    } else {
-      loginBoxHeight = 450;
-    }
-
-    return loginBoxHeight;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: Text(isLoginPage ? 'LOGIN' : 'REGISTER'),
         backgroundColor: primaryBlue,
       ),
       body: Stack(
@@ -117,6 +140,28 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Align(
+                           alignment: Alignment.center,
+                           child: Text(
+                             isLoginPage ? 'LOGIN' : 'REGISTER',
+                             style: const TextStyle(
+                               fontSize: 24,
+                               fontWeight: FontWeight.bold
+                             ),
+                           )
+                         ),
+                      const SizedBox(height: 5),
+                      const Divider(),
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            // Handle back navigation
+                            // Navigator.pop(context);
+                          },
+                        ),
+                      ),
                       const Text(
                         'Phone No',
                         style: TextStyle(
@@ -151,7 +196,7 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
                                           )),
                                       child: Center(
                                         child: Text(
-                                          _selectedCountryCode,
+                                          selectedCountryCode,
                                           style: const TextStyle(
                                             color: Colors.black,
                                             fontWeight: FontWeight.bold,
@@ -164,7 +209,7 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
                                   // Phone Number TextField
                                   Expanded(
                                     child: TextField(
-                                      controller: _phoneController,
+                                      controller: phoneController,
                                       decoration: const InputDecoration(
                                         border: InputBorder
                                             .none, // Remove the TextField border
@@ -186,14 +231,19 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
                         cursor: SystemMouseCursors.click,
                         child: GestureDetector(
                           onTap: () {
-                            // navigate to register page
-                            print("Entering register page");
+                            // navigate to register page or login
+                            isLoginPage = !isLoginPage ;
+                            setState(() {
+                              
+                            });
                           },
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: Text(
-                              "Create an account",
+                              isLoginPage ? "Create an account" : "Already have an account?",
                               style: TextStyle(
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: primaryBlue,
                                   color: primaryBlue,
                                   fontWeight: FontWeight.w400),
                             ),
@@ -206,10 +256,9 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
                         height: 40,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Handle OTP send logic here
-                            print(
-                                'Send OTP to $_selectedCountryCode${_phoneController.text}');
-                          },
+                             _verifyPhoneNumber();
+                              //A router to the OTP verification page
+                            },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue, // Button color
                           ),
@@ -220,17 +269,6 @@ class _LoginScreenWebState extends State<LoginScreenWeb> {
                         ),
                       ),
                     ],
-                  ),
-                ),
-                Positioned(
-                  top: 50.0,
-                  right: 20.0,
-                  child: IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      // Handle back navigation
-                      Navigator.pop(context);
-                    },
                   ),
                 ),
               ],

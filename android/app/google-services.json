@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "435697920829",
+    "project_id": "healthboosters-dff5b",
+    "storage_bucket": "healthboosters-dff5b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435697920829:android:124eabdc75d24480803354",
+        "android_client_info": {
+          "package_name": "com.example.yourhealth"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ6HCHgz7DgF6uO3t6QVIIM0mF7-Hdzyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

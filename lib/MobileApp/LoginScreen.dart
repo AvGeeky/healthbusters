@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:yourhealth/MobileApp/OtpScreen.dart';
+import 'package:yourhealth/WebApp/LoginScreen.dart';
+import 'package:yourhealth/auth.dart';
 import 'package:yourhealth/colorPallete.dart';
+
+bool isLoginPage = true;
+
+String? verificationId;
+
+final TextEditingController phoneController = TextEditingController();
 
 class LoginScreenMobile extends StatefulWidget {
   const LoginScreenMobile({super.key});
@@ -9,11 +18,34 @@ class LoginScreenMobile extends StatefulWidget {
 }
 
 class _LoginScreenMobileState extends State<LoginScreenMobile> {
-  final TextEditingController _phoneController = TextEditingController();
-  String _selectedCountryCode = '+1'; // Default country code
-
+  final Auth _auth = Auth();
   // List of country codes
   final List<String> _countryCodes = ['+1', '+44', '+91', '+33', '+81'];
+
+  void _verifyPhoneNumber() async {
+    try {
+      await _auth.signInWithPhoneNumber(
+        selectedCountryCode + phoneController.text,
+        (verificationId) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationPageNMobile(
+                  selectedCountryCode + phoneController.text ,verificationId),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      // Handle errors such as invalid phone number or network issues
+      print('Failed to verify phone number: $e');
+      // You can show a dialog or a Snackbar with the error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to verify phone number: $e')),
+      );
+    }
+  }
+
 
   // Method to show country code picker
   void _showCountryCodePicker() {
@@ -27,7 +59,7 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
               title: Text(code),
               onTap: () {
                 setState(() {
-                  _selectedCountryCode = code;
+                  selectedCountryCode = code;
                 });
                 Navigator.pop(context); // Close the bottom sheet
               },
@@ -43,7 +75,7 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
     return Scaffold(
       backgroundColor: primaryBlue,
       appBar: AppBar(
-        title: const Text('Login'),
+        title: Text(isLoginPage ? 'LOGIN' : 'REGISTER'),
         backgroundColor: Colors.white,
       ),
       body: Stack(
@@ -83,7 +115,17 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        isLoginPage ? 'LOGIN' : 'REGISTER',
+                        style: const TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      )),
+                  const SizedBox(height: 5),
+                  const Divider(),
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
@@ -122,16 +164,12 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
                                       horizontal: 12),
                                   decoration: const BoxDecoration(
                                       color: Colors.white,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(10),
-                                        bottomLeft: Radius.circular(10),
-                                      ),
                                       border: Border(
                                         right: BorderSide(color: Colors.grey),
                                       )),
                                   child: Center(
                                     child: Text(
-                                      _selectedCountryCode,
+                                      selectedCountryCode,
                                       style: const TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold,
@@ -144,7 +182,7 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
                               // Phone Number TextField
                               Expanded(
                                 child: TextField(
-                                  controller: _phoneController,
+                                  controller: phoneController,
                                   decoration: const InputDecoration(
                                     border: InputBorder
                                         .none, // Remove the TextField border
@@ -166,14 +204,21 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
                     cursor: SystemMouseCursors.click,
                     child: GestureDetector(
                       onTap: () {
-                        // navigate to register page
-                        print("Entering register page");
+                        // navigate to register page or login
+                        isLoginPage = !isLoginPage;
+                        setState(() {});
                       },
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          "Create an account",
-                          style: TextStyle(color: primaryBlue, fontWeight: FontWeight.w400),
+                          isLoginPage
+                              ? "Create an account"
+                              : "Already have an account?",
+                          style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              decorationColor: primaryBlue,
+                              color: primaryBlue,
+                              fontWeight: FontWeight.w400),
                         ),
                       ),
                     ),
@@ -184,9 +229,8 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
                     height: 40,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Handle OTP send logic here
-                        print(
-                            'Send OTP to $_selectedCountryCode${_phoneController.text}');
+                        //A router to the OTP verification page
+                        _verifyPhoneNumber();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue, // Button color
