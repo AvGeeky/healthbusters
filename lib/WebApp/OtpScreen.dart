@@ -1,67 +1,34 @@
-
 import 'package:flutter/material.dart';
 import 'package:yourhealth/MobileApp/LoginScreen.dart';
 import 'package:yourhealth/MobileApp/OtpScreen.dart';
-import 'package:yourhealth/RegisterPage.dart';
+import 'package:yourhealth/MobileApp/RegisterPage.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveRegisterScreen.dart';
 import 'package:yourhealth/auth.dart';
 import 'package:yourhealth/colorPallete.dart';
 import 'package:yourhealth/WebApp/LoginScreen.dart';
 
+final int otpLength = 6;
+final List<TextEditingController> controllers = [];
+final List<FocusNode> focusNodes = [];
+String phoneNumber = '1';
+
 class OtpVerificationPageWeb extends StatefulWidget {
-  String phoneNumber = '-1';
+  String phoneNumber = '1';
   String verificationId;
   OtpVerificationPageWeb(this.phoneNumber, this.verificationId, {super.key});
-
   @override
   _OtpVerificationPageWebState createState() => _OtpVerificationPageWebState();
 }
 
 class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
-  final int otpLength = 6;
-  final Auth _auth = Auth(); // Create an instance of Auth
-  final List<TextEditingController> controllers = [];
-  final List<FocusNode> focusNodes = [];
-
   @override
   void initState() {
+    phoneNumber = widget.phoneNumber;
+    verificationId = widget.verificationId;
     super.initState();
     for (int i = 0; i < otpLength; i++) {
       controllers.add(TextEditingController());
       focusNodes.add(FocusNode());
-    }
-  }
-
-  @override
-  void dispose() {
-    for (var controller in controllers) {
-      controller.dispose();
-    }
-    for (var node in focusNodes) {
-      node.dispose();
-    }
-    super.dispose();
-  }
-
-   // Method to handle SMS code verification
-  void _signInWithPhoneNumber() {
-    String otp = controllers.map((controller) => controller.text).join();
-    if (otp.length == otpLength) {
-      _auth.signInWithSmsCode(verificationId! , otp).then((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Successfully signed in!')),
-        );
-        // Navigate to Home Screen or another page
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
-      }).catchError((e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign-in failed: ${e.message}')),
-        );
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the full OTP')),
-      );
     }
   }
 
@@ -82,8 +49,7 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
         elevation: 0,
       ),
       body: Stack(
-         fit: StackFit
-            .expand, 
+        fit: StackFit.expand,
         children: [
           Positioned(
             top: MediaQuery.of(context).size.height * 0.2, // 20% from the top
@@ -123,13 +89,10 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
                       child: Text(
                         "OTP VERIFICATION",
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold
-                        ),
-                      )
-                    ),
-                    const SizedBox(height: 5),
-                    const Divider(),
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      )),
+                  const SizedBox(height: 5),
+                  const Divider(),
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
@@ -141,7 +104,7 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
                     ),
                   ),
                   Text(
-                    "OTP sent to ${widget.phoneNumber}", // Replace with dynamic number
+                    "OTP sent to ${phoneNumber}", // Replace with dynamic number
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 20),
@@ -149,8 +112,8 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       "Enter the OTP for verification", // Replace with dynamic number
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -158,10 +121,10 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(
                         otpLength,
-                        (index) =>
-                            OtpVerificationPageNMobile(widget.phoneNumber, widget.verificationId)
-                                .buildOtpField(
-                                    index, context, controllers, focusNodes)),
+                        (index) => OtpVerificationPageNMobile(
+                                phoneNumber, verificationId)
+                            .buildOtpField(
+                                index, context, controllers, focusNodes)),
                   ),
                   const SizedBox(height: 20),
                   Row(
@@ -194,10 +157,16 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
                     height: 40,
                     child: ElevatedButton(
                       onPressed: () {
+                        //For testing ignoring signing in
+                        // Navigator.pushReplacement(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //       builder: (context) =>
+                        //           isLoginPage ? const HomeScreen() : const ResponsiveRegisterScreen()));
+
                         // Handle OTP verification
-                      if (!isLoginPage) {
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
-                      }                        },
+                        signInWithPhoneNumber(context, verificationId);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue, // Button color
                       ),

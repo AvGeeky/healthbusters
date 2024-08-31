@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:yourhealth/MobileApp/OtpScreen.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveOtpScreen.dart';
 import 'package:yourhealth/WebApp/LoginScreen.dart';
+import 'package:yourhealth/WebApp/OtpScreen.dart';
 import 'package:yourhealth/auth.dart';
 import 'package:yourhealth/colorPallete.dart';
+import 'package:yourhealth/main.dart';
 
-bool isLoginPage = true;
-
-String? verificationId;
+String verificationId = '0';
 
 final TextEditingController phoneController = TextEditingController();
 
@@ -27,13 +28,13 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
       await _auth.signInWithPhoneNumber(
         selectedCountryCode + phoneController.text,
         (verificationId) {
+          print("Routing to Otp screen");
           Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OtpVerificationPageNMobile(
-                  selectedCountryCode + phoneController.text ,verificationId),
-            ),
-          );
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Responsiveotpscreen(
+                      selectedCountryCode + phoneController.text,
+                      verificationId)));
         },
       );
     } catch (e) {
@@ -45,7 +46,6 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
       );
     }
   }
-
 
   // Method to show country code picker
   void _showCountryCodePicker() {
@@ -75,7 +75,7 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
     return Scaffold(
       backgroundColor: primaryBlue,
       appBar: AppBar(
-        title: Text(isLoginPage ? 'LOGIN' : 'REGISTER'),
+        title: const Text('LOGIN'),
         backgroundColor: Colors.white,
       ),
       body: Stack(
@@ -117,11 +117,11 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Align(
+                  const Align(
                       alignment: Alignment.center,
                       child: Text(
-                        isLoginPage ? 'LOGIN' : 'REGISTER',
-                        style: const TextStyle(
+                        'LOGIN',
+                        style: TextStyle(
                             fontSize: 24, fontWeight: FontWeight.bold),
                       )),
                   const SizedBox(height: 5),
@@ -200,35 +200,18 @@ class _LoginScreenMobileState extends State<LoginScreenMobile> {
                     ],
                   ),
                   const SizedBox(height: 20.0),
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        // navigate to register page or login
-                        isLoginPage = !isLoginPage;
-                        setState(() {});
-                      },
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          isLoginPage
-                              ? "Create an account"
-                              : "Already have an account?",
-                          style: TextStyle(
-                              decoration: TextDecoration.underline,
-                              decorationColor: primaryBlue,
-                              color: primaryBlue,
-                              fontWeight: FontWeight.w400),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20.0),
                   SizedBox(
                     width: double.infinity,
                     height: 40,
                     child: ElevatedButton(
                       onPressed: () {
+                        //For testing purpose ignoring the verification
+                        // Navigator.push(context,
+                        //     MaterialPageRoute(builder: (context) {
+                        //   return Responsiveotpscreen(
+                        //           selectedCountryCode + phoneController.text,
+                        //           "jljlj");
+                        // }));
                         //A router to the OTP verification page
                         _verifyPhoneNumber();
                       },

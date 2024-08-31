@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyBX0VBQXr5Ru6eVupc9tW_DlM361RKlRCA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>435697920829</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.yourhealth</string>
+	<key>PROJECT_ID</key>
+	<string>healthboosters-dff5b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>healthboosters-dff5b.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:435697920829:ios:1c5c3d6f3d5a302b803354</string>
+	<key>DATABASE_URL</key>
+	<string>https://healthboosters-dff5b-default-rtdb.asia-southeast1.firebasedatabase.app</string>
+</dict>
+</plist>
