@@ -4,17 +4,15 @@ import 'package:intl/intl.dart';
 import 'package:yourhealth/ResponsizeLayouts/ResponsiveRegisterScreen.dart';
 import 'package:yourhealth/WebApp/RegisterPage.dart';
 
-
-
 class RegisterScreenMobile extends StatefulWidget {
-  const RegisterScreenMobile({super.key});
+  late String userRole;
+  RegisterScreenMobile(this.userRole, {super.key});
 
   @override
   State<RegisterScreenMobile> createState() => _RegisterScreenMobileState();
 }
 
 class _RegisterScreenMobileState extends State<RegisterScreenMobile> {
-
   Future<void> _selectDate() async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -86,13 +84,12 @@ class _RegisterScreenMobileState extends State<RegisterScreenMobile> {
                         ),
                         const SizedBox(height: 16),
                         TextField(
-                          controller: emailController,
+                          controller: phoneemailController,
                           decoration: const InputDecoration(
                             labelText: 'Email',
                             hintText: 'Enter your email address',
                             border: OutlineInputBorder(),
                           ),
-                          keyboardType: TextInputType.emailAddress,
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
@@ -102,9 +99,12 @@ class _RegisterScreenMobileState extends State<RegisterScreenMobile> {
                             border: OutlineInputBorder(),
                           ),
                           items: const [
-                            DropdownMenuItem(value: 'Male', child: Text('Male')),
-                            DropdownMenuItem(value: 'Female', child: Text('Female')),
-                            DropdownMenuItem(value: 'Other', child: Text('Other')),
+                            DropdownMenuItem(
+                                value: 'Male', child: Text('Male')),
+                            DropdownMenuItem(
+                                value: 'Female', child: Text('Female')),
+                            DropdownMenuItem(
+                                value: 'Other', child: Text('Other')),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -113,28 +113,35 @@ class _RegisterScreenMobileState extends State<RegisterScreenMobile> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        InkWell(
-                          onTap: _selectDate,
-                          child: InputDecorator(
-                            decoration: const InputDecoration(
-                              labelText: 'Date of Birth',
-                              border: OutlineInputBorder(),
-                            ),
-                            child: Text(
-                              selectedDate == null
-                                  ? 'Select your date of birth'
-                                  : DateFormat('yyyy-MM-dd').format(selectedDate!),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const UploadBox(),
-                        const SizedBox(height: 16),
+                         widget.userRole == "User" ?
+                          Column(
+                            children: [
+                              InkWell(
+                              onTap: _selectDate,
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Date of Birth',
+                                  border: OutlineInputBorder(),
+                                ),
+                                child: Text(
+                                  selectedDate == null
+                                      ? 'Select your date of birth'
+                                      : DateFormat('yyyy-MM-dd')
+                                          .format(selectedDate!),
+                                ),
+                              ),
+                              ),
+                            const SizedBox(height: 16),
+                            const UploadBox(),
+                            const SizedBox(height: 16) 
+                          ],
+                        )
+                         : const SizedBox.shrink(),
                         SizedBox(
                           width: double.infinity,
                           height: 40,
                           child: ElevatedButton(
-                            onPressed:() => submitForm(context),
+                            onPressed: () => submitForm(context, widget.userRole),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue, // Button color
                             ),
@@ -144,7 +151,7 @@ class _RegisterScreenMobileState extends State<RegisterScreenMobile> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -156,7 +163,6 @@ class _RegisterScreenMobileState extends State<RegisterScreenMobile> {
       ),
     );
   }
-
 }
 
 class UploadBox extends StatefulWidget {
@@ -177,9 +183,9 @@ class _UploadBoxState extends State<UploadBox> {
         selectedFiles.addAll(result.files);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result.files.length} file(s) selected')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('${result.files.length} file(s) selected')),
+      // );
     }
   }
 

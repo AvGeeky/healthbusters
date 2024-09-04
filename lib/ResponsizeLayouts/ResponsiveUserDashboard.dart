@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:yourhealth/MobileApp/UserDashboardWeb.dart';
+import 'package:yourhealth/MobileApp/UserDashboardMobile.dart';
 import 'package:yourhealth/WebApp/UserDashboardWeb.dart';
+
+
+String getGreeting() {
+  final hour = DateTime.now().hour;
+
+  if (hour < 12) {
+    return 'Good Morning';
+  } else if (hour < 17) {
+    return 'Good Afternoon';
+  } else {
+    return 'Good Evening';
+  }
+}
 
 class Responsiveuserdashboard extends StatefulWidget {
 

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "435697920829",
+    "firebase_url": "https://healthboosters-dff5b-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "healthboosters-dff5b",
     "storage_bucket": "healthboosters-dff5b.appspot.com"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.yourhealth"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "435697920829-iejo9629svhddpha73vo5he44pvri4ka.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.yourhealth",
+            "certificate_hash": "428f339676856b6a5cd5fd6e4d436b182a57a18c"
+          }
+        },
+        {
+          "client_id": "435697920829-rchn592plp8jv40f6nu91e7te2qbd3ih.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDZ6HCHgz7DgF6uO3t6QVIIM0mF7-Hdzyk"
@@ -20,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "435697920829-rchn592plp8jv40f6nu91e7te2qbd3ih.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "435697920829-ght2e0tgompmmasghbhomte5beqeullu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.yourhealth"
+              }
+            }
+          ]
         }
       }
     }

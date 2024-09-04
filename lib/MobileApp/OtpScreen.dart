@@ -1,60 +1,64 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'package:yourhealth/MobileApp/LoginScreen.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveAdminDashboard.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveDoctorDashboard.dart';
 import 'package:yourhealth/ResponsizeLayouts/ResponsiveRegisterScreen.dart';
 import 'package:yourhealth/ResponsizeLayouts/ResponsiveUserDashboard.dart';
+import 'package:yourhealth/WebApp/LoginScreen.dart';
 import 'package:yourhealth/WebApp/OtpScreen.dart';
+import 'package:yourhealth/WebApp/RegisterPage.dart';
 import 'package:yourhealth/colorPallete.dart';
 import 'package:yourhealth/auth.dart';
 
-// Method to handle SMS code verification
-void signInWithPhoneNumber(BuildContext context, String verificationId) async {
-  String otp = controllers.map((controller) => controller.text).join();
-  if (otp.length == otpLength) {
-    try {
-      // Create PhoneAuthCredential with the verification ID and SMS code
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: otp,
-      );
-      
-      // Sign in the user with the credential
-      UserCredential userCredential = await auth.signInWithCredential(credential);
-      
-      // After signing in, check if the user is new or existing
-      // ignore: use_build_context_synchronously
-      handleUserNavigation(context, userCredential);
-      
-    } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign-in failed: ${e.toString()}')),
-      );
-    }
+void handleUserNavigation(BuildContext context, UserCredential userCredential, String selectedRole) async {
+  if (userCredential == null) {
+    print("UserCredential is null");
+    return;
+  }
+
+  if (selectedRole == null || selectedRole.isEmpty) {
+    print("Selected role is null or empty");
+    return;
+  }
+
+  if (context == null) {
+    print("Context is null");
+    return;
+  }
+
+  String uid = userCredential.user?.uid ?? '';
+
+  if (uid.isEmpty) {
+    print("User ID is null or empty");
+    return;
+  }
+
+
+  bool accountExists = await doesAccountExist(uid, selectedRole);
+
+  if (accountExists) {
+    print("${selectedRole} Account exists");
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      if (selectedRole == "Admin") {
+        return const Responsiveadmindashboard();
+      } else if (selectedRole == "Doctor") {
+        return const Responsivedoctordashboard();
+      } else {
+        return Responsiveuserdashboard();
+      }
+    }));
   } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter the full OTP')),
+    print("Entering the registration page for registering $selectedRole");
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        return ResponsiveRegisterScreen(selectedRole);
+      }),
     );
   }
 }
-
-void handleUserNavigation(BuildContext context, UserCredential userCredential) {
-  // Check if the user is new
-  if (userCredential.additionalUserInfo?.isNewUser ?? true) {
-    // Navigate to the registration page for new users
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ResponsiveRegisterScreen()),
-    );
-  } else {
-    // Navigate to the home screen for existing users
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => Responsiveuserdashboard()),
-    );
-  }
-}
-
 
 class OtpVerificationPageNMobile extends StatefulWidget {
   String phoneNumber = '-1';
@@ -108,6 +112,90 @@ class _OtpVerificationPageNMobileState
       focusNodes.add(FocusNode());
     }
   }
+
+// Method to handle SMS code verification
+void signInWithPhoneNumber(BuildContext context, String verificationId) async {
+  String otp = controllers.map((controller) => controller.text).join();
+  if (otp.length == otpLength) {
+    // Show loading indicator
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Create PhoneAuthCredential with the verification ID and SMS code
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otp,
+      );
+
+      // Sign in the user with the credential
+      UserCredential userCredential = await auth.signInWithCredential(credential);
+
+      // Check if the user is new or existing
+      bool accountExists = await doesAccountExist(userCredential.user!.uid, selectedRole!);
+
+      if (mounted) {
+        // Update loading state before navigating
+        setState(() {
+          isLoading = false;
+        });
+
+        if (accountExists) {
+          print("${selectedRole} Account exists");
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+            if (selectedRole == "User") {
+              return Responsiveuserdashboard();
+            } else if (selectedRole == "Doctor") {
+              return const Responsivedoctordashboard();
+            } else {
+              return const Responsiveadmindashboard();
+            }
+          }));
+        } else {
+          print("Entering the registration page for registering $selectedRole");
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              return ResponsiveRegisterScreen(selectedRole!);
+            }),
+          );
+        }
+      }
+
+    } catch (e) {
+      if (mounted) {
+        // Update loading state on error
+        setState(() {
+          isLoading = false;
+        });
+
+        // Use a post-frame callback to ensure that context is valid
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign-in failed: ${e.toString()}')),
+          );
+        });
+      }
+    }
+  } else {
+    if (mounted) {
+      // Update loading state if OTP length is invalid
+      setState(() {
+        isLoading = false;
+      });
+
+      // Use a post-frame callback to ensure that context is valid
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter the full OTP')),
+        );
+      });
+    }
+  }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -222,21 +310,28 @@ class _OtpVerificationPageNMobileState
                     child: ElevatedButton(
                       onPressed: () {
                         //For testing ignoring signing in
-                        // Navigator.pushReplacement(
+                        // Navigator.push(
                         //   context,
                         //   MaterialPageRoute(
                         //       builder: (context) =>
                         //           isLoginPage ? const HomeScreen() : const ResponsiveRegisterScreen()));
-
+                        setState(() {
+                          isLoading = true;
+                        });
                         signInWithPhoneNumber(context, verificationId);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue, // Button color
                       ),
-                      child: const Text(
-                        "Verify & Continue",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator(
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            )
+                          : const Text(
+                              "Verify & Continue",
+                              style: TextStyle(color: Colors.white),
+                            ),
                     ),
                   ),
                 ],

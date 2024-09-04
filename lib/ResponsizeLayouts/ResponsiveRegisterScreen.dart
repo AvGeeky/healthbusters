@@ -8,15 +8,19 @@ import 'package:yourhealth/WebApp/RegisterPage.dart';
 List<PlatformFile> selectedFiles = [];
 
 class ResponsiveRegisterScreen extends StatefulWidget {
-  const ResponsiveRegisterScreen({super.key});
+  late String userRole;
+  ResponsiveRegisterScreen(this.userRole, {super.key});
 
   @override
-  _ResponsiveRegisterScreenState createState() => _ResponsiveRegisterScreenState();
+  _ResponsiveRegisterScreenState createState() =>
+      _ResponsiveRegisterScreenState();
 }
 
-class _ResponsiveRegisterScreenState extends State<ResponsiveRegisterScreen> with WidgetsBindingObserver {
+class _ResponsiveRegisterScreenState extends State<ResponsiveRegisterScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
+    print("Responsive registration page");
     super.initState();
     WidgetsBinding.instance.addObserver(this);
   }
@@ -31,16 +35,17 @@ class _ResponsiveRegisterScreenState extends State<ResponsiveRegisterScreen> wit
   void didChangeMetrics() {
     setState(() {}); // Rebuild the layout when the screen size changes
   }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth > 600) {
           // Layout for desktop
-          return const RegisterScreenWeb();
+          return RegisterScreenWeb(widget.userRole);
         } else {
           // Layout for mobile
-          return const RegisterScreenMobile();
+          return RegisterScreenMobile(widget.userRole);
         }
       },
     );

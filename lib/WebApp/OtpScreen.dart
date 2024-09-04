@@ -1,8 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:yourhealth/MobileApp/LoginScreen.dart';
 import 'package:yourhealth/MobileApp/OtpScreen.dart';
 import 'package:yourhealth/MobileApp/RegisterPage.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveAdminDashboard.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveDoctorDashboard.dart';
 import 'package:yourhealth/ResponsizeLayouts/ResponsiveRegisterScreen.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveUserDashboard.dart';
+import 'package:yourhealth/animatedWidgets.dart';
 import 'package:yourhealth/auth.dart';
 import 'package:yourhealth/colorPallete.dart';
 import 'package:yourhealth/WebApp/LoginScreen.dart';
@@ -32,9 +37,72 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
     }
   }
 
+// Method to handle SMS code verification
+  void signInWithPhoneNumber(
+      BuildContext context, String verificationId) async {
+    String otp = controllers.map((controller) => controller.text).join();
+    if (otp.length == otpLength) {
+      try {
+        // Create PhoneAuthCredential with the verification ID and SMS code
+        PhoneAuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: verificationId,
+          smsCode: otp,
+        );
+
+        // Sign in the user with the credential
+        UserCredential userCredential = await auth.signInWithCredential(credential);
+
+        // After signing in, check if the user is new or existing
+        // ignore: use_build_context_synchronously
+        setState(() {
+          isLoading = false;
+        });
+        bool accountExists = await doesAccountExist(currentUser!.uid, selectedRole!);
+
+        if (accountExists) {
+          print("${selectedRole} Account exists");
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            if (selectedRole == "User") {
+              return Responsiveuserdashboard();
+            } else if (selectedRole == "Doctor") {
+              return const Responsivedoctordashboard();
+            } else {
+              return const Responsiveadmindashboard();
+            }
+          }));
+        } else {
+          print("Entering the registration page for registering $selectedRole");
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) {
+              return ResponsiveRegisterScreen(selectedRole!);
+            }),
+          );
+        }
+        
+      } catch (e) {
+        setState(() {
+          isLoading = false;
+        });
+        // ignore: use_build_context_synchronously
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text('Sign-in failed: ${e.toString()}')),
+        // );
+      }
+    } else {
+        setState(() {
+          isLoading = false;
+        });
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please enter the full OTP')),
+      // );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('OTP VERIFICATION'),
         backgroundColor: primaryBlue,
@@ -93,15 +161,9 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
                       )),
                   const SizedBox(height: 5),
                   const Divider(),
-                  Align(
+                  const Align(
                     alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        // Handle back navigation
-                        // Navigator.pop(context);
-                      },
-                    ),
+                    child: RotatingCancelButton()
                   ),
                   Text(
                     "OTP sent to ${phoneNumber}", // Replace with dynamic number
@@ -165,12 +227,20 @@ class _OtpVerificationPageWebState extends State<OtpVerificationPageWeb> {
                         //           isLoginPage ? const HomeScreen() : const ResponsiveRegisterScreen()));
 
                         // Handle OTP verification
+                        setState(() {
+                          isLoading = true;
+                        });
                         signInWithPhoneNumber(context, verificationId);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue, // Button color
                       ),
-                      child: const Text(
+                      child: isLoading
+                              ? const CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                )
+                              : const Text(
                         "Verify & Continue",
                         style: TextStyle(color: Colors.white),
                       ),

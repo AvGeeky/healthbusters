@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveAdminDashboard.dart';
+import 'package:yourhealth/ResponsizeLayouts/ResponsiveDoctorDashboard.dart';
 import 'package:yourhealth/ResponsizeLayouts/ResponsiveRegisterScreen.dart';
 import 'package:yourhealth/ResponsizeLayouts/ResponsiveUserDashboard.dart';
 import 'package:yourhealth/WebApp/UserDashboardWeb.dart';
@@ -10,13 +12,15 @@ import 'package:yourhealth/auth.dart';
 import 'package:yourhealth/colorPallete.dart';
 
 final TextEditingController nameController = TextEditingController();
-final TextEditingController emailController = TextEditingController();
+final TextEditingController phoneemailController = TextEditingController();
 String? selectedGender;
 DateTime? selectedDate;
 
-Future<void> submitForm(BuildContext context) async {
+Future<void> submitForm(BuildContext context, String userRole) async {
+  
+  if (userRole == "User") {
     if (nameController.text.isEmpty ||
-        emailController.text.isEmpty ||
+        phoneemailController.text.isEmpty ||
         selectedGender == null ||
         selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -24,17 +28,56 @@ Future<void> submitForm(BuildContext context) async {
       );
       return;
     }
+  }else{
+    if (nameController.text.isEmpty ||
+        phoneemailController.text.isEmpty ||
+        selectedGender == null
+        ) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all fields')),
+      );
+      return;
+    }
+  }
 
-    
+  try {
+    // Save user details to Firestore
+    if (userRole == "Admin") {
+      await FirebaseFirestore.instance.collection('admins').doc(userId).set({
+        'name': nameController.text,
+        'email': phoneemailController.text,
+        'gender': selectedGender,
+        'status': "pending"
+      });
 
-    try {
-      // Save user details to Firestore
+      requestAccess(userRole);
+      
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Responsiveadmindashboard(),
+          ));
+    } else if (userRole == "Doctor") {
+      await FirebaseFirestore.instance.collection('doctors').doc(userId).set({
+        'name': nameController.text,
+        'email': phoneemailController.text,
+        'gender': selectedGender,
+        'status': "pending"
+      });
+
+      requestAccess(userRole);
+
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Responsivedoctordashboard(),
+      ));
+    } else {
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'name': nameController.text,
-        'email': emailController.text,
+        'email': phoneemailController.text,
         'gender': selectedGender,
-        'date_of_birth': selectedDate!.toIso8601String(),
-        'files': [], // Initialize with an empty list
+        'files': []
       });
 
       // Upload files to Firebase Storage and get download URLs
@@ -56,31 +99,31 @@ Future<void> submitForm(BuildContext context) async {
         'files': fileUrls,
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Registration successful')),
+      // );
       Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => Responsiveuserdashboard(),
-          ));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to register: ${e.toString()}')),
-      );
+      ));
     }
+  } catch (e) {
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(content: Text('Failed to register: ${e.toString()}')),
+    // );
   }
-  
+}
 
 class RegisterScreenWeb extends StatefulWidget {
-  const RegisterScreenWeb({super.key});
+  late String userRole;
+  RegisterScreenWeb(this.userRole, {super.key});
 
   @override
   State<RegisterScreenWeb> createState() => _RegisterScreenWebState();
 }
 
 class _RegisterScreenWebState extends State<RegisterScreenWeb> {
-
   Future<void> _pickFiles() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
@@ -91,9 +134,9 @@ class _RegisterScreenWebState extends State<RegisterScreenWeb> {
         selectedFiles.addAll(result.files);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result.files.length} file(s) selected')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('${result.files.length} file(s) selected')),
+      // );
     }
   }
 
@@ -131,7 +174,8 @@ class _RegisterScreenWebState extends State<RegisterScreenWeb> {
           return Stack(
             children: [
               Positioned(
-                top: MediaQuery.of(context).size.height * 0.2, // 20% from the top
+                top: MediaQuery.of(context).size.height *
+                    0.2, // 20% from the top
                 left: MediaQuery.of(context).size.width / 2 -
                     getLoginBoxWidth(context) / 2 -
                     200, // 10% from the left
@@ -181,13 +225,11 @@ class _RegisterScreenWebState extends State<RegisterScreenWeb> {
                                 ),
                                 const SizedBox(height: 16),
                                 TextField(
-                                  controller: emailController,
+                                  controller: phoneemailController,
                                   decoration: const InputDecoration(
-                                    labelText: 'Email',
-                                    hintText: 'Enter your email address',
+                                    labelText: 'Enter your email address',
                                     border: OutlineInputBorder(),
                                   ),
-                                  keyboardType: TextInputType.emailAddress,
                                 ),
                                 const SizedBox(height: 16),
                                 DropdownButtonFormField<String>(
@@ -197,9 +239,12 @@ class _RegisterScreenWebState extends State<RegisterScreenWeb> {
                                     border: OutlineInputBorder(),
                                   ),
                                   items: const [
-                                    DropdownMenuItem(value: 'Male', child: Text('Male')),
-                                    DropdownMenuItem(value: 'Female', child: Text('Female')),
-                                    DropdownMenuItem(value: 'Other', child: Text('Other')),
+                                    DropdownMenuItem(
+                                        value: 'Male', child: Text('Male')),
+                                    DropdownMenuItem(
+                                        value: 'Female', child: Text('Female')),
+                                    DropdownMenuItem(
+                                        value: 'Other', child: Text('Other')),
                                   ],
                                   onChanged: (value) {
                                     setState(() {
@@ -208,54 +253,61 @@ class _RegisterScreenWebState extends State<RegisterScreenWeb> {
                                   },
                                 ),
                                 const SizedBox(height: 16),
-                                InkWell(
-                                  onTap: _selectDate,
-                                  child: InputDecorator(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Date of Birth',
-                                      border: OutlineInputBorder(),
-                                    ),
-                                    child: Text(
-                                      selectedDate == null
-                                          ? 'Select your date of birth'
-                                          : DateFormat('yyyy-MM-dd').format(selectedDate!),
-                                    ),
-                                  ),
-                                ),
+                                widget.userRole == "User"
+                                    ? InkWell(
+                                        onTap: _selectDate,
+                                        child: InputDecorator(
+                                          decoration: const InputDecoration(
+                                            labelText: 'Date of Birth',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          child: Text(
+                                            selectedDate == null
+                                                ? 'Select your date of birth'
+                                                : DateFormat('yyyy-MM-dd')
+                                                    .format(selectedDate!),
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink()
                               ],
                             ),
                           ),
                           const SizedBox(width: 16),
                           // File Upload Box
-                          Expanded(
-                            flex: 1,
-                            child: InkWell(
-                              onTap: _pickFiles,
-                              child: Container(
-                                height: 200,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    selectedFiles.isEmpty
-                                        ? 'Tap to upload files'
-                                        : 'Files Selected: ${selectedFiles.length}',
-                                    style: const TextStyle(fontSize: 16),
-                                    textAlign: TextAlign.center,
+                          widget.userRole == "User"
+                              ? Expanded(
+                                  flex: 1,
+                                  child: InkWell(
+                                    onTap: _pickFiles,
+                                    child: Container(
+                                      height: 200,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          selectedFiles.isEmpty
+                                              ? 'Tap to upload files'
+                                              : 'Files Selected: ${selectedFiles.length}',
+                                          style: const TextStyle(fontSize: 16),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ),
-                          ),
+                                )
+                              : const SizedBox.shrink()
                         ],
                       ),
                       const SizedBox(height: 16),
                       // Second Row: List of Uploaded Files
-                      if (selectedFiles.isNotEmpty)
+
+                      if (selectedFiles.isNotEmpty && widget.userRole == "User")
                         SizedBox(
-                          height: 200, // Adjust height based on your design needs
+                          height:
+                              200, // Adjust height based on your design needs
                           child: ListView.builder(
                             itemCount: selectedFiles.length,
                             itemBuilder: (context, index) {
@@ -265,20 +317,21 @@ class _RegisterScreenWebState extends State<RegisterScreenWeb> {
                                 subtitle: Text(
                                     '${(selectedFiles[index].size / 1024).toStringAsFixed(2)} KB'),
                                 trailing: IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  icon: const Icon(Icons.close,
+                                      color: Colors.red),
                                   onPressed: () => _removeFile(index),
                                 ),
                               );
                             },
                           ),
                         ),
-                      // Last Row: Submit Button
                       Center(
                         child: SizedBox(
                           width: 250,
                           height: 40,
                           child: ElevatedButton(
-                            onPressed: () => submitForm(context),
+                            onPressed: () =>
+                                submitForm(context, widget.userRole),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue, // Button color
                             ),
@@ -289,6 +342,9 @@ class _RegisterScreenWebState extends State<RegisterScreenWeb> {
                           ),
                         ),
                       ),
+                      const SizedBox(
+                        height: 40,
+                      )
                     ],
                   ),
                 ),

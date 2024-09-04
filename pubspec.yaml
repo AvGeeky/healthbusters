@@ -41,7 +41,18 @@ dependencies:
   firebase_auth: ^5.2.0
   cloud_firestore: ^5.3.0
   firebase_storage: ^12.2.0
-
+  google_sign_in: ^6.2.1
+  flutter_signin_button: ^2.0.0
+  google_sign_in_web: ^0.12.4+2
+  flutter_secure_storage: ^5.0.2
+  lottie: ^3.1.2
+  firebase_ml_model_downloader: ^0.3.1
+  path_provider: ^2.1.4
+  webview_flutter: ^4.9.0
+  webview_flutter_android: ^3.16.7
+  webview_flutter_web: ^0.2.3+2
+  webview_flutter_wkwebview: ^3.15.0
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -71,7 +82,10 @@ flutter:
     - assets/illustrations/doctor1.png
     - assets/illustrations/doctor2.png
     - assets/illustrations/background_login.png
-
+    - assets/illustrations/ambulance.png
+    - assets/illustrations/heart1.json
+    - assets/illustrations/heart2.json
+    - assets/model/model.tflite
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
